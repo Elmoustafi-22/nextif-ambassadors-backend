@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import Ambassador from "./ambassador.model";
 import Task from "../task/task.model";
 import TaskSubmission from "../task/submission.model";
-import { hashPassword } from "../../utils/password";
+import { comparePassword, hashPassword } from "../../utils/password";
 // Auth logic moved to modules/auth
 
 /**
@@ -55,8 +55,14 @@ export const changeAmbassadorPassword = async (req: Request, res: Response) => {
     return res.status(404).json({ message: "Ambassador not found" });
   }
 
+  if (!ambassador.password) {
+    return res
+      .status(400)
+      .json({ message: "Password not set for this account" });
+  }
+
   // Verify current password
-  const isMatch = await bcrypt.compare(currentPassword, ambassador.password);
+  const isMatch = comparePassword(currentPassword, ambassador.password);
   if (!isMatch) {
     return res.status(400).json({ message: "Incorrect current password" });
   }
