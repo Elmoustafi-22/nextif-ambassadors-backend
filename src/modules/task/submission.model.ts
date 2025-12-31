@@ -11,6 +11,7 @@ export interface ITaskSubmission {
     text: string;
   }[];
   content?: string;
+  adminFeedback?: string;
   submittedAt?: Date;
   reviewedAt?: Date;
 }
@@ -37,6 +38,7 @@ const submissionSchema = new Schema<ITaskSubmission>(
       },
     ],
     content: String,
+    adminFeedback: String,
     submittedAt: Date,
     reviewedAt: Date,
   },
