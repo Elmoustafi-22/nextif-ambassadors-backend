@@ -18,7 +18,11 @@ export interface ITaskSubmission {
 const submissionSchema = new Schema<ITaskSubmission>(
   {
     taskId: { type: Schema.Types.ObjectId, ref: "Task", required: true },
-    ambassadorId: { type: Schema.Types.ObjectId, required: true },
+    ambassadorId: {
+      type: Schema.Types.ObjectId,
+      ref: "Ambassador",
+      required: true,
+    },
     status: {
       type: String,
       enum: ["NOT_STARTED", "SUBMITTED", "COMPLETED", "REJECTED"],
@@ -26,10 +30,12 @@ const submissionSchema = new Schema<ITaskSubmission>(
     },
     proofFiles: [String],
     links: [String],
-    responses: [{
-      whatToDoId: { type: Schema.Types.ObjectId, required: true },
-      text: { type: String, required: true }
-    }],
+    responses: [
+      {
+        whatToDoId: { type: Schema.Types.ObjectId, required: true },
+        text: { type: String, required: true },
+      },
+    ],
     content: String,
     submittedAt: Date,
     reviewedAt: Date,
@@ -39,11 +45,11 @@ const submissionSchema = new Schema<ITaskSubmission>(
   }
 );
 
-submissionSchema.index(
-    { taskId: 1, ambassadorId: 1 },
-    {unique: true}
-)
+submissionSchema.index({ taskId: 1, ambassadorId: 1 }, { unique: true });
 
-const TaskSubmission = model<ITaskSubmission>("TaskSubmission", submissionSchema);
+const TaskSubmission = model<ITaskSubmission>(
+  "TaskSubmission",
+  submissionSchema
+);
 
 export default TaskSubmission;
