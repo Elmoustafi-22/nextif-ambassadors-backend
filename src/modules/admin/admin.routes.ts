@@ -2,19 +2,20 @@ import { Router } from "express";
 import { protect } from "../../middlewares/auth.middleware";
 import { role } from "../../middlewares/roles.middleware";
 import { upload } from "../../middlewares/upload.middleware";
-import { 
-    getAdminProfile, 
-    updateAdminProfile,
-    getAllAmbassadors,
-    createAmbassador,
-    getAmbassadorById,
-    updateAmbassadorStatus,
-    bulkOnboardAmbassadors,
-    sendMessage,
-    sendAnnouncement,
-    forceResetAmbassadorPassword,
-    getDashboardStats,
-    changeAdminPassword
+import {
+  getAdminProfile,
+  updateAdminProfile,
+  getAllAmbassadors,
+  createAmbassador,
+  getAmbassadorById,
+  updateAmbassadorStatus,
+  bulkOnboardAmbassadors,
+  sendMessage,
+  sendAnnouncement,
+  forceResetAmbassadorPassword,
+  getDashboardStats,
+  changeAdminPassword,
+  deleteAmbassador,
 } from "./admin.controller";
 
 const adminRouter = Router();
@@ -36,11 +37,16 @@ adminRouter.post("/messages", sendMessage);
 adminRouter.post("/announcements", sendAnnouncement);
 
 // Ambassador Management (Admin View)
-adminRouter.post("/ambassadors/bulk", upload.single("file"), bulkOnboardAmbassadors); // Bulk Import
+adminRouter.post(
+  "/ambassadors/bulk",
+  upload.single("file"),
+  bulkOnboardAmbassadors
+); // Bulk Import
 adminRouter.get("/ambassadors", getAllAmbassadors);
 adminRouter.post("/ambassadors", createAmbassador);
 adminRouter.get("/ambassadors/:id", getAmbassadorById);
 adminRouter.patch("/ambassadors/:id/status", updateAmbassadorStatus);
 adminRouter.post("/ambassadors/:id/force-reset", forceResetAmbassadorPassword);
+adminRouter.delete("/ambassadors/:id", deleteAmbassador);
 
 export default adminRouter;
