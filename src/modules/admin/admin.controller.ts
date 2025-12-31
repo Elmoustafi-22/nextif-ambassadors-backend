@@ -53,11 +53,9 @@ export const sendAnnouncement = async (req: Request, res: Response) => {
     body
   );
 
-  res
-    .status(201)
-    .json({
-      message: `Announcement sent to ${ambassadorIds.length} ambassadors`,
-    });
+  res.status(201).json({
+    message: `Announcement sent to ${ambassadorIds.length} ambassadors`,
+  });
 };
 
 /**
