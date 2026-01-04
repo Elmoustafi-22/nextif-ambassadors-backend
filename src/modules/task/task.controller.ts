@@ -111,6 +111,7 @@ export const getSubmissions = async (req: Request, res: Response) => {
   const submissions = await TaskSubmission.find(query)
     .populate("ambassadorId", "firstName lastName email university")
     .populate("taskId", "title")
+    .populate("reviewedBy", "firstName lastName")
     .sort({ submittedAt: -1 });
 
   res.json(submissions);
@@ -136,9 +137,13 @@ export const verifySubmission = async (req: Request, res: Response) => {
       status,
       adminFeedback: feedback,
       reviewedAt: new Date(),
+      reviewedBy: req.user?.id,
     },
     { new: true }
-  ).populate("taskId", "title");
+  )
+    .populate("taskId", "title")
+    .populate("ambassadorId", "firstName lastName email university")
+    .populate("reviewedBy", "firstName lastName");
 
   if (!submission) {
     return res.status(404).json({ message: "Submission not found" });
@@ -148,7 +153,8 @@ export const verifySubmission = async (req: Request, res: Response) => {
   try {
     const taskTitle = (submission.taskId as any).title;
     await Notification.create({
-      recipientId: submission.ambassadorId,
+      recipientId:
+        (submission.ambassadorId as any)._id || submission.ambassadorId,
       recipientRole: "AMBASSADOR",
       type: "MESSAGE",
       title: `Submission Update: ${taskTitle}`,

@@ -9,6 +9,7 @@ import TaskSubmission from "../task/submission.model";
 import Complaint from "../complaint/complaint.model";
 import Notification from "../notification/notification.model";
 import Task from "../task/task.model";
+import { EmailService } from "../../utils/email.service";
 
 /**
  * MESSAGING / ANNOUCEMENTS
@@ -170,6 +171,18 @@ export const createAmbassador = async (req: Request, res: Response) => {
     role: "AMBASSADOR",
   });
 
+  // Send Welcome Email
+  try {
+    await EmailService.sendAmbassadorWelcomeEmail(
+      ambassador.email,
+      ambassador.firstName,
+      ambassador.lastName
+    );
+  } catch (error) {
+    console.error("Failed to send welcome email:", error);
+    // Continue anyway since ambassador is created
+  }
+
   res.status(201).json(ambassador);
 };
 
@@ -264,6 +277,18 @@ export const bulkOnboardAmbassadors = async (req: Request, res: Response) => {
         passwordSet: false,
         role: "AMBASSADOR",
       });
+
+      // Send Welcome Email
+      try {
+        await EmailService.sendAmbassadorWelcomeEmail(
+          newAmbassador.email,
+          newAmbassador.firstName,
+          newAmbassador.lastName
+        );
+      } catch (error) {
+        console.error(`Failed to send email to ${record.email}:`, error);
+      }
+
       results.push(newAmbassador);
     }
 

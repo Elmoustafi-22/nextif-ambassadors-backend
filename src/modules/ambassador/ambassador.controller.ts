@@ -25,14 +25,13 @@ export const updateProfile = async (req: Request, res: Response) => {
   if (!req.user) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  const { phone, university, avatar } = req.body;
+  const { phone, avatar } = req.body;
 
-  // Only allow updating specific profile fields
+  // Only allow updating specific profile fields (Restricting university and names)
   const ambassador = await Ambassador.findByIdAndUpdate(
     req.user.id,
     {
       "profile.phone": phone,
-      "profile.university": university,
       "profile.avatar": avatar,
     },
     { new: true, runValidators: true }

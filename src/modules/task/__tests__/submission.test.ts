@@ -4,8 +4,13 @@ import TaskSubmission from "../submission.model";
 import Notification from "../../notification/notification.model";
 
 // Mock the models
-jest.mock("../submission.model");
-jest.mock("../../notification/notification.model");
+// Mock the models
+jest.mock("../submission.model", () => ({
+  findByIdAndUpdate: jest.fn(),
+}));
+jest.mock("../../notification/notification.model", () => ({
+  create: jest.fn(),
+}));
 
 describe("Task Controller - verifySubmission", () => {
   let req: Partial<Request>;
@@ -32,13 +37,28 @@ describe("Task Controller - verifySubmission", () => {
       _id: "submission123",
       status: "COMPLETED",
       adminFeedback: "Great job!",
-      ambassadorId: "ambassador123",
+      ambassadorId: {
+        _id: "ambassador123",
+        firstName: "John",
+        lastName: "Doe",
+      },
       taskId: { _id: "task123", title: "Test Task" },
     };
 
-    // Mock findByIdAndUpdate to return the mock submission
+    // Mock findByIdAndUpdate to return the mock submission with chained populate
+    const populateMock = jest.fn().mockReturnThis();
     (TaskSubmission.findByIdAndUpdate as jest.Mock).mockReturnValue({
-      populate: jest.fn().mockResolvedValue(mockSubmission),
+      populate: populateMock,
+      exec: jest.fn().mockResolvedValue(mockSubmission),
+    });
+    // For chained populate, the last one usually returns a promise if called with await
+    // Mongoose queries are thenable.
+    // Simplified Mock:
+    (TaskSubmission.findByIdAndUpdate as jest.Mock).mockReturnValue({
+      populate: jest.fn().mockReturnThis(),
+      then: jest.fn(function (resolve) {
+        resolve(mockSubmission);
+      }),
     });
 
     await verifySubmission(req as Request, res as Response);

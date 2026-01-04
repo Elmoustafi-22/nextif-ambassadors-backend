@@ -14,6 +14,7 @@ export interface ITaskSubmission {
   adminFeedback?: string;
   submittedAt?: Date;
   reviewedAt?: Date;
+  reviewedBy?: Types.ObjectId;
 }
 
 const submissionSchema = new Schema<ITaskSubmission>(
@@ -41,6 +42,7 @@ const submissionSchema = new Schema<ITaskSubmission>(
     adminFeedback: String,
     submittedAt: Date,
     reviewedAt: Date,
+    reviewedBy: { type: Schema.Types.ObjectId, ref: "Admin" },
   },
   {
     timestamps: true,

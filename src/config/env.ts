@@ -12,6 +12,12 @@ export const env = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "1d",
 
   SALT_ROUNDS: parseInt(process.env.SALT_ROUNDS || "10", 10),
+  SMTP_HOST: process.env.SMTP_HOST || "smtp-relay.brevo.com",
+  SMTP_PORT: parseInt(process.env.SMTP_PORT || "587", 10),
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASS: process.env.SMTP_PASS,
+  FROM_EMAIL: process.env.FROM_EMAIL || "no-reply@nextif.com",
+  FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
 };
 
 if (!env.MONGODB_URI) {
