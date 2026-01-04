@@ -9,6 +9,7 @@ import {
   createAmbassador,
   getAmbassadorById,
   updateAmbassadorStatus,
+  updateAmbassador,
   bulkOnboardAmbassadors,
   sendMessage,
   sendAnnouncement,
@@ -45,6 +46,7 @@ adminRouter.post(
 adminRouter.get("/ambassadors", getAllAmbassadors);
 adminRouter.post("/ambassadors", createAmbassador);
 adminRouter.get("/ambassadors/:id", getAmbassadorById);
+adminRouter.patch("/ambassadors/:id", updateAmbassador);
 adminRouter.patch("/ambassadors/:id/status", updateAmbassadorStatus);
 adminRouter.post("/ambassadors/:id/force-reset", forceResetAmbassadorPassword);
 adminRouter.delete("/ambassadors/:id", deleteAmbassador);

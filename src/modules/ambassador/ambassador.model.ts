@@ -14,29 +14,49 @@ export interface IAmbassador {
     phone?: string;
     avatar?: string;
     university?: string;
+    instagram?: string;
+    twitter?: string;
+    linkedin?: string;
+    tiktok?: string;
   };
   createdAt: Date;
 }
 
-const ambassadorSchema = new Schema<IAmbassador>({
-  firstName: { type: String, required: true, trim: true },
-  lastName: { type: String, required: true, trim: true },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-  password: { type: String, select: false },
-  role: { type: String, enum: ["AMBASSADOR"], default: "AMBASSADOR" },
-  passwordSet: { type: Boolean, default: false },
-  accountStatus: { type: String, enum: ["PRELOADED", "PASSWORD_PENDING", "ACTIVE", "SUSPENDED"], default: "PRELOADED" },
-  passwordResetToken: { type: String, select: false },
-  passwordResetExpires: { type: Date },
-  profile: {
-    phone: String,
-    avatar: String,
-    university: String,
+const ambassadorSchema = new Schema<IAmbassador>(
+  {
+    firstName: { type: String, required: true, trim: true },
+    lastName: { type: String, required: true, trim: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: { type: String, select: false },
+    role: { type: String, enum: ["AMBASSADOR"], default: "AMBASSADOR" },
+    passwordSet: { type: Boolean, default: false },
+    accountStatus: {
+      type: String,
+      enum: ["PRELOADED", "PASSWORD_PENDING", "ACTIVE", "SUSPENDED"],
+      default: "PRELOADED",
+    },
+    passwordResetToken: { type: String, select: false },
+    passwordResetExpires: { type: Date },
+    profile: {
+      phone: String,
+      avatar: String,
+      university: String,
+      instagram: String,
+      twitter: String,
+      linkedin: String,
+      tiktok: String,
+    },
+  },
+  {
+    timestamps: true,
   }
-}, {
-    timestamps: true
-});
-
+);
 
 const Ambassador = model<IAmbassador>("Ambassador", ambassadorSchema);
 

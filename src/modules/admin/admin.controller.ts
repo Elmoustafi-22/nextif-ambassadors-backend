@@ -149,7 +149,16 @@ export const getAllAmbassadors = async (req: Request, res: Response) => {
 export const createAmbassador = async (req: Request, res: Response) => {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-  const { firstName, lastName, email, university } = req.body;
+  const {
+    firstName,
+    lastName,
+    email,
+    university,
+    instagram,
+    twitter,
+    linkedin,
+    tiktok,
+  } = req.body;
 
   const existing = await Ambassador.findOne({ email: email.toLowerCase() });
   if (existing) {
@@ -165,6 +174,10 @@ export const createAmbassador = async (req: Request, res: Response) => {
     email,
     profile: {
       university,
+      instagram,
+      twitter,
+      linkedin,
+      tiktok,
     },
     accountStatus: "PRELOADED",
     passwordSet: false,
@@ -193,6 +206,72 @@ export const getAmbassadorById = async (req: Request, res: Response) => {
   if (!ambassador) {
     return res.status(404).json({ message: "Ambassador not found" });
   }
+  res.json(ambassador);
+};
+
+export const updateAmbassador = async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+  const { id } = req.params;
+  const {
+    firstName,
+    lastName,
+    email,
+    university,
+    instagram,
+    twitter,
+    linkedin,
+    tiktok,
+  } = req.body;
+
+  const updateData: any = {};
+  if (firstName) updateData.firstName = firstName;
+  if (lastName) updateData.lastName = lastName;
+  if (email) updateData.email = email.toLowerCase();
+
+  // Social media and University are in profile object
+  if (university || instagram || twitter || linkedin || tiktok) {
+    updateData.profile = {};
+    if (university) updateData["profile.university"] = university;
+    if (instagram) updateData["profile.instagram"] = instagram;
+    if (twitter) updateData["profile.twitter"] = twitter;
+    if (linkedin) updateData["profile.linkedin"] = linkedin;
+    if (tiktok) updateData["profile.tiktok"] = tiktok;
+
+    // For nested objects using dots is often better with findByIdAndUpdate
+    const ambassador = await Ambassador.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          firstName: firstName,
+          lastName: lastName,
+          email: email?.toLowerCase(),
+          "profile.university": university,
+          "profile.instagram": instagram,
+          "profile.twitter": twitter,
+          "profile.linkedin": linkedin,
+          "profile.tiktok": tiktok,
+        },
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!ambassador) {
+      return res.status(404).json({ message: "Ambassador not found" });
+    }
+    return res.json(ambassador);
+  }
+
+  const ambassador = await Ambassador.findByIdAndUpdate(
+    id,
+    { firstName, lastName, email: email?.toLowerCase() },
+    { new: true, runValidators: true }
+  );
+
+  if (!ambassador) {
+    return res.status(404).json({ message: "Ambassador not found" });
+  }
+
   res.json(ambassador);
 };
 
