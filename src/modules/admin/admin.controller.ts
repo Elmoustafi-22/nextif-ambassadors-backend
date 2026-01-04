@@ -157,7 +157,7 @@ export const createAmbassador = async (req: Request, res: Response) => {
     instagram,
     twitter,
     linkedin,
-    tiktok,
+    facebook,
   } = req.body;
 
   const existing = await Ambassador.findOne({ email: email.toLowerCase() });
@@ -177,7 +177,7 @@ export const createAmbassador = async (req: Request, res: Response) => {
       instagram,
       twitter,
       linkedin,
-      tiktok,
+      facebook,
     },
     accountStatus: "PRELOADED",
     passwordSet: false,
@@ -221,7 +221,7 @@ export const updateAmbassador = async (req: Request, res: Response) => {
     instagram,
     twitter,
     linkedin,
-    tiktok,
+    facebook,
   } = req.body;
 
   const updateData: any = {};
@@ -230,13 +230,13 @@ export const updateAmbassador = async (req: Request, res: Response) => {
   if (email) updateData.email = email.toLowerCase();
 
   // Social media and University are in profile object
-  if (university || instagram || twitter || linkedin || tiktok) {
+  if (university || instagram || twitter || linkedin || facebook) {
     updateData.profile = {};
     if (university) updateData["profile.university"] = university;
     if (instagram) updateData["profile.instagram"] = instagram;
     if (twitter) updateData["profile.twitter"] = twitter;
     if (linkedin) updateData["profile.linkedin"] = linkedin;
-    if (tiktok) updateData["profile.tiktok"] = tiktok;
+    if (facebook) updateData["profile.facebook"] = facebook;
 
     // For nested objects using dots is often better with findByIdAndUpdate
     const ambassador = await Ambassador.findByIdAndUpdate(
@@ -250,7 +250,7 @@ export const updateAmbassador = async (req: Request, res: Response) => {
           "profile.instagram": instagram,
           "profile.twitter": twitter,
           "profile.linkedin": linkedin,
-          "profile.tiktok": tiktok,
+          "profile.facebook": facebook,
         },
       },
       { new: true, runValidators: true }

@@ -17,7 +17,7 @@ export interface IAmbassador {
     instagram?: string;
     twitter?: string;
     linkedin?: string;
-    tiktok?: string;
+    facebook?: string;
   };
   createdAt: Date;
 }
@@ -50,7 +50,7 @@ const ambassadorSchema = new Schema<IAmbassador>(
       instagram: String,
       twitter: String,
       linkedin: String,
-      tiktok: String,
+      facebook: String,
     },
   },
   {
