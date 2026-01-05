@@ -11,9 +11,21 @@ The backend API service for the NextIF Ambassador Platform. It provides RESTful 
 - **Authentication:** JWT & Bcryptjs
 - **Testing:** Jest & Supertest
 - **File Uploads:** Multer & Cloudinary
-- **Email:** Nodemailer
+- **Email:** Nodemailer (SMTP based notifications)
 
-## Prerequisites
+## Core Features
+
+- **Dynamic Task Management:** Supports Weekly, Monthly, and **ADHOC** task types.
+- **Automated Email System:**
+  - Welcome emails for new ambassadors.
+  - Real-time notifications for task assignments.
+  - Feedback-driven redo request notifications.
+- **Advanced Submission Workflow:**
+  - Multi-status tracking (Submitted, Completed, Rejected, **Redo**).
+  - Individual due date overrides for redo requests.
+  - Reviewer tracking for accountability.
+- **Bulk Operations:** Onboard multiple ambassadors via CSV.
+- **File & Link Submissions:** Secure uploads via Cloudinary.
 
 - Node.js (v18 or higher recommended)
 - MongoDB instance (local or Atlas)

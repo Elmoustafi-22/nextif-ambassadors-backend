@@ -11,6 +11,17 @@ jest.mock("../submission.model", () => ({
 jest.mock("../../notification/notification.model", () => ({
   create: jest.fn(),
 }));
+jest.mock("../../ambassador/ambassador.model", () => ({
+  find: jest.fn(),
+}));
+jest.mock("../../../utils/email.service", () => ({
+  EmailService: {
+    sendTaskAssignedEmail: jest.fn(),
+    sendTaskRedoEmail: jest.fn(),
+  },
+}));
+
+import { EmailService } from "../../../utils/email.service";
 
 describe("Task Controller - verifySubmission", () => {
   let req: Partial<Request>;
@@ -46,20 +57,14 @@ describe("Task Controller - verifySubmission", () => {
     };
 
     // Mock findByIdAndUpdate to return the mock submission with chained populate
-    const populateMock = jest.fn().mockReturnThis();
-    (TaskSubmission.findByIdAndUpdate as jest.Mock).mockReturnValue({
-      populate: populateMock,
-      exec: jest.fn().mockResolvedValue(mockSubmission),
-    });
-    // For chained populate, the last one usually returns a promise if called with await
-    // Mongoose queries are thenable.
-    // Simplified Mock:
-    (TaskSubmission.findByIdAndUpdate as jest.Mock).mockReturnValue({
+    const mockQuery = {
       populate: jest.fn().mockReturnThis(),
-      then: jest.fn(function (resolve) {
-        resolve(mockSubmission);
-      }),
-    });
+      then: jest.fn((onFulfilled) =>
+        Promise.resolve(mockSubmission).then(onFulfilled)
+      ),
+      catch: jest.fn(),
+    };
+    (TaskSubmission.findByIdAndUpdate as jest.Mock).mockReturnValue(mockQuery);
 
     await verifySubmission(req as Request, res as Response);
 
@@ -73,12 +78,13 @@ describe("Task Controller - verifySubmission", () => {
       { new: true }
     );
 
-    // Verify notification creation
     expect(Notification.create).toHaveBeenCalledWith(
       expect.objectContaining({
         recipientId: "ambassador123",
+        recipientRole: "AMBASSADOR",
         type: "MESSAGE",
-        body: expect.stringContaining("Great job!"),
+        title: "Submission Update: Test Task",
+        body: expect.stringContaining("Your submission has been COMPLETED"),
         referenceId: "task123",
       })
     );
@@ -90,5 +96,70 @@ describe("Task Controller - verifySubmission", () => {
     req.body = { status: "INVALID" };
     await verifySubmission(req as Request, res as Response);
     expect(res.status).toHaveBeenCalledWith(400);
+  });
+
+  it("should handle REDO status and set individualDueDate", async () => {
+    const newDate = "2026-02-01T10:00:00Z";
+    req.body = {
+      status: "REDO",
+      feedback: "Fix the link",
+      newDueDate: newDate,
+    };
+    req.user = { id: "admin123", role: "ADMIN" };
+
+    const mockSubmission = {
+      _id: "submission123",
+      status: "REDO",
+      adminFeedback: "Fix the link",
+      individualDueDate: new Date(newDate),
+      ambassadorId: {
+        _id: "ambassador123",
+        firstName: "John",
+        email: "john@example.com",
+      },
+      taskId: { _id: "task123", title: "Test Task" },
+    };
+
+    const mockQuery = {
+      populate: jest.fn().mockReturnThis(),
+      then: jest.fn((onFulfilled) =>
+        Promise.resolve(mockSubmission).then(onFulfilled)
+      ),
+    };
+    (TaskSubmission.findByIdAndUpdate as jest.Mock).mockReturnValue(mockQuery);
+
+    await verifySubmission(req as Request, res as Response);
+
+    expect(TaskSubmission.findByIdAndUpdate).toHaveBeenCalledWith(
+      "submission123",
+      expect.objectContaining({
+        status: "REDO",
+        adminFeedback: "Fix the link",
+        individualDueDate: expect.any(Date),
+        reviewedBy: "admin123",
+      }),
+      { new: true }
+    );
+
+    expect(EmailService.sendTaskRedoEmail).toHaveBeenCalledWith(
+      "john@example.com",
+      "John",
+      "Test Task",
+      "Fix the link",
+      expect.any(Date)
+    );
+
+    expect(Notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        recipientId: "ambassador123",
+        recipientRole: "AMBASSADOR",
+        type: "MESSAGE",
+        title: "Submission Update: Test Task",
+        body: expect.stringContaining("Your submission has been REDO"),
+        referenceId: "task123",
+      })
+    );
+
+    expect(res.json).toHaveBeenCalledWith(mockSubmission);
   });
 });

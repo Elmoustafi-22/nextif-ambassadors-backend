@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import Task from "./task.model";
 import TaskSubmission from "./submission.model";
 import Notification from "../notification/notification.model";
+import Ambassador from "../ambassador/ambassador.model";
+import { EmailService } from "../../utils/email.service";
 import { Types } from "mongoose";
 
 /**
@@ -68,6 +70,23 @@ export const createTask = async (req: Request, res: Response) => {
   });
 
   res.status(201).json(task);
+
+  // Send assignment emails
+  if (assignedTo && assignedTo.length > 0) {
+    try {
+      const ambassadors = await Ambassador.find({ _id: { $in: assignedTo } });
+      for (const ambassador of ambassadors) {
+        await EmailService.sendTaskAssignedEmail(
+          ambassador.email,
+          ambassador.firstName,
+          task.title,
+          task.dueDate
+        );
+      }
+    } catch (error) {
+      console.error("Failed to send assignment emails:", error);
+    }
+  }
 };
 
 export const getAllTasks = async (req: Request, res: Response) => {
@@ -122,13 +141,13 @@ export const getSubmissions = async (req: Request, res: Response) => {
  */
 
 export const verifySubmission = async (req: Request, res: Response) => {
-  const { status, feedback } = req.body; // "COMPLETED" or "REJECTED"
+  const { status, feedback, newDueDate } = req.body; // "COMPLETED", "REJECTED", or "REDO"
   const { id } = req.params; // Submission ID
 
-  if (!["COMPLETED", "REJECTED"].includes(status)) {
+  if (!["COMPLETED", "REJECTED", "REDO"].includes(status)) {
     return res
       .status(400)
-      .json({ message: "Invalid status. Use COMPLETED or REJECTED." });
+      .json({ message: "Invalid status. Use COMPLETED, REJECTED, or REDO." });
   }
 
   const submission = await TaskSubmission.findByIdAndUpdate(
@@ -136,6 +155,7 @@ export const verifySubmission = async (req: Request, res: Response) => {
     {
       status,
       adminFeedback: feedback,
+      individualDueDate: newDueDate ? new Date(newDueDate) : undefined,
       reviewedAt: new Date(),
       reviewedBy: req.user?.id,
     },
@@ -164,8 +184,21 @@ export const verifySubmission = async (req: Request, res: Response) => {
       read: false,
       referenceId: (submission.taskId as any)._id,
     });
+
+    // Send Redo Email if status is REDO
+    if (status === "REDO") {
+      const ambassador = submission.ambassadorId as any;
+      const taskTitle = (submission.taskId as any).title;
+      await EmailService.sendTaskRedoEmail(
+        ambassador.email,
+        ambassador.firstName,
+        taskTitle,
+        feedback || "Please redo the task as per instructions.",
+        new Date(newDueDate)
+      );
+    }
   } catch (error) {
-    console.error("Failed to create notification:", error);
+    console.error("Failed to send notification/email:", error);
   }
 
   res.json(submission);
@@ -208,6 +241,12 @@ export const getMyTasks = async (req: Request, res: Response) => {
     return {
       ...task.toObject(),
       status: submission ? submission.status : "PENDING",
+      dueDate:
+        submission &&
+        submission.status === "REDO" &&
+        submission.individualDueDate
+          ? submission.individualDueDate
+          : task.dueDate,
       submission: submission || null,
     };
   });
@@ -250,13 +289,26 @@ export const submitTask = async (req: Request, res: Response) => {
     return res.status(404).json({ message: "Task not found" });
   }
 
+  // Check if there's a submission for individual due date (Redo)
+  const existingSubmission = await TaskSubmission.findOne({
+    taskId: id as string,
+    ambassadorId: req.user.id,
+  });
+
+  const dueDate =
+    existingSubmission &&
+    existingSubmission.status === "REDO" &&
+    existingSubmission.individualDueDate
+      ? existingSubmission.individualDueDate
+      : task.dueDate;
+
   // Check if assigned
   if (!task.assignedTo.map((aid) => aid.toString()).includes(req.user.id)) {
     return res.status(403).json({ message: "Task not assigned to you" });
   }
 
   // Check deadline
-  if (new Date() > new Date(task.dueDate)) {
+  if (new Date() > new Date(dueDate)) {
     return res.status(400).json({ message: "Submission deadline has passed" });
   }
 

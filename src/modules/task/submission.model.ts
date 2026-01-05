@@ -3,7 +3,8 @@ import { Schema, model, Types } from "mongoose";
 export interface ITaskSubmission {
   taskId: Types.ObjectId;
   ambassadorId: Types.ObjectId;
-  status: "NOT_STARTED" | "SUBMITTED" | "COMPLETED" | "REJECTED";
+  status: "NOT_STARTED" | "SUBMITTED" | "COMPLETED" | "REJECTED" | "REDO";
+  individualDueDate?: Date;
   proofFiles?: string[];
   links?: string[];
   responses?: {
@@ -27,9 +28,10 @@ const submissionSchema = new Schema<ITaskSubmission>(
     },
     status: {
       type: String,
-      enum: ["NOT_STARTED", "SUBMITTED", "COMPLETED", "REJECTED"],
+      enum: ["NOT_STARTED", "SUBMITTED", "COMPLETED", "REJECTED", "REDO"],
       default: "NOT_STARTED",
     },
+    individualDueDate: Date,
     proofFiles: [String],
     links: [String],
     responses: [
