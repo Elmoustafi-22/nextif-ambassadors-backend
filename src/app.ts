@@ -5,6 +5,9 @@ import rateLimit from "express-rate-limit";
 
 const app: Application = express();
 
+// Enable trust proxy for rate limiting behind reverse proxies (e.g., Render, Heroku)
+app.set("trust proxy", 1);
+
 import routes from "./routes";
 import { errorHandler } from "./middlewares/error.middleware";
 
