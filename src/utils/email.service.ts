@@ -1,22 +1,53 @@
-import nodemailer from "nodemailer";
 import { env } from "../config/env";
 
 export class EmailService {
-  private static transporter = nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: Number(env.SMTP_PORT),
-    secure: Number(env.SMTP_PORT) === 465, // true for 465, false for other ports
-    auth: {
-      user: env.SMTP_USER,
-      pass: env.SMTP_PASS,
-    },
-    pool: true, // Use a pool of connections
-    debug: true, // Show debug output
-    logger: true, // Log information
-    connectionTimeout: 20000, // 20 seconds
-    greetingTimeout: 20000, // 20 seconds
-    socketTimeout: 30000, // 30 seconds
-  });
+  private static readonly BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+
+  /**
+   * Internal helper to send email via Brevo HTTP API
+   */
+  private static async sendViaApi(options: {
+    to: string;
+    subject: string;
+    html: string;
+    senderName?: string;
+  }) {
+    const payload = {
+      sender: {
+        name: options.senderName || "NextIF",
+        email: env.FROM_EMAIL,
+      },
+      to: [{ email: options.to }],
+      subject: options.subject,
+      htmlContent: options.html,
+    };
+
+    try {
+      const response = await fetch(this.BREVO_API_URL, {
+        method: "POST",
+        headers: {
+          "api-key": env.SMTP_PASS || "",
+          "content-type": "application/json",
+          accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          `Brevo API Error: ${response.status} - ${JSON.stringify(data)}`
+        );
+      }
+
+      console.log("Email sent successfully via Brevo API:", data);
+      return data;
+    } catch (error) {
+      console.error("Failed to send email via Brevo API:", error);
+      throw error;
+    }
+  }
 
   /**
    * Send Welcome Email to New Ambassador
@@ -28,11 +59,7 @@ export class EmailService {
   ) {
     const loginUrl = env.FRONTEND_URL;
 
-    const mailOptions = {
-      from: `"NextIF" <${env.FROM_EMAIL}>`,
-      to,
-      subject: "Welcome to the NextIF Ambassador Portal!",
-      html: `
+    const html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
           <h2 style="color: #2563eb;">Welcome, ${firstName}!</h2>
           <p>You have been officially added as an ambassador to the <strong>NextIF Ambassador Portal</strong>.</p>
@@ -52,17 +79,13 @@ export class EmailService {
           
           <p>Best regards,<br/>The NextIF Team</p>
         </div>
-      `,
-    };
+      `;
 
-    try {
-      const info = await this.transporter.sendMail(mailOptions);
-      console.log("Welcome email sent: %s", info.messageId);
-      return info;
-    } catch (error) {
-      console.error("Failed to send welcome email:", error);
-      throw error;
-    }
+    return this.sendViaApi({
+      to,
+      subject: "Welcome to the NextIF Ambassador Portal!",
+      html,
+    });
   }
 
   /**
@@ -74,11 +97,7 @@ export class EmailService {
     taskTitle: string,
     dueDate: Date
   ) {
-    const mailOptions = {
-      from: `"NextIF" <${env.FROM_EMAIL}>`,
-      to,
-      subject: `New Task Assigned: ${taskTitle}`,
-      html: `
+    const html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
           <h2 style="color: #2563eb;">Hello ${firstName},</h2>
           <p>A new task has been assigned to you on the <strong>NextIF Ambassador Portal</strong>.</p>
@@ -95,11 +114,14 @@ export class EmailService {
           
           <p>Best regards,<br/>The NextIF Team</p>
         </div>
-      `,
-    };
+      `;
 
     try {
-      await this.transporter.sendMail(mailOptions);
+      await this.sendViaApi({
+        to,
+        subject: `New Task Assigned: ${taskTitle}`,
+        html,
+      });
     } catch (error) {
       console.error("Failed to send task assignment email:", error);
     }
@@ -115,11 +137,7 @@ export class EmailService {
     remark: string,
     newDueDate: Date
   ) {
-    const mailOptions = {
-      from: `"NextIF" <${env.FROM_EMAIL}>`,
-      to,
-      subject: `Action Required: Redo for ${taskTitle}`,
-      html: `
+    const html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
           <h2 style="color: #dc2626;">Redo Requested: ${taskTitle}</h2>
           <p>Hello ${firstName},</p>
@@ -136,11 +154,14 @@ export class EmailService {
           
           <p>Best regards,<br/>The NextIF Team</p>
         </div>
-      `,
-    };
+      `;
 
     try {
-      await this.transporter.sendMail(mailOptions);
+      await this.sendViaApi({
+        to,
+        subject: `Action Required: Redo for ${taskTitle}`,
+        html,
+      });
     } catch (error) {
       console.error("Failed to send task redo email:", error);
     }
