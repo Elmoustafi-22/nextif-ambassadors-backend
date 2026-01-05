@@ -57,14 +57,14 @@ export const ambassadorFirstLoginController = async (
     requiresPasswordReset: true,
     token: tempToken,
     user: {
-        id: ambassador._id.toString(),
-        email: ambassador.email,
-        role: "ambassador",
-        firstName: ambassador.firstName,
-        lastName: ambassador.lastName,
-        avatar: ambassador.profile?.avatar,
-        isFirstLogin: true
-    }
+      id: ambassador._id.toString(),
+      email: ambassador.email,
+      role: "ambassador",
+      firstName: ambassador.firstName,
+      lastName: ambassador.lastName,
+      profile: ambassador.profile,
+      isFirstLogin: true,
+    },
   });
 };
 
@@ -110,21 +110,21 @@ export const ambassadorLoginController = async (
 
   const token = generateToken({
     id: ambassador._id.toString(),
-    role: "AMBASSADOR"
+    role: "AMBASSADOR",
   });
 
   return res.json({
     token,
     user: {
-        id: ambassador._id.toString(),
-        email: ambassador.email,
-        role: "ambassador",
-        firstName: ambassador.firstName,
-        lastName: ambassador.lastName,
-        avatar: ambassador.profile?.avatar,
-        isFirstLogin: !ambassador.passwordSet
-    }
-  })
+      id: ambassador._id.toString(),
+      email: ambassador.email,
+      role: "ambassador",
+      firstName: ambassador.firstName,
+      lastName: ambassador.lastName,
+      profile: ambassador.profile,
+      isFirstLogin: !ambassador.passwordSet,
+    },
+  });
 };
 
 export const resetAmbassadorPassword = async (req: Request, res: Response) => {
@@ -162,14 +162,14 @@ export const resetAmbassadorPassword = async (req: Request, res: Response) => {
     message: "Password set successfully",
     token,
     user: {
-        id: ambassador._id.toString(),
-        email: ambassador.email,
-        role: "ambassador",
-        firstName: ambassador.firstName,
-        lastName: ambassador.lastName,
-        avatar: ambassador.profile?.avatar,
-        isFirstLogin: false
-    }
+      id: ambassador._id.toString(),
+      email: ambassador.email,
+      role: "ambassador",
+      firstName: ambassador.firstName,
+      lastName: ambassador.lastName,
+      profile: ambassador.profile,
+      isFirstLogin: false,
+    },
   });
 };
 
@@ -188,9 +188,9 @@ export const adminLogin = async (req: Request, res: Response) => {
 
   // Check if password is set
   if (!admin.passwordSet) {
-      return res.status(400).json({
-          message: "Password not set. Please use first-time login."
-      });
+    return res.status(400).json({
+      message: "Password not set. Please use first-time login.",
+    });
   }
 
   const isMatch = await comparePassword(password, admin.password);
@@ -209,110 +209,115 @@ export const adminLogin = async (req: Request, res: Response) => {
   res.json({
     token,
     user: {
-        id: admin._id.toString(),
-        email: admin.email,
-        role: "admin",
-        firstName: admin.firstName,
-        lastName: admin.lastName,
-        title: admin.title,
-        avatar: admin.avatar,
-        isFirstLogin: !admin.passwordSet
-    }
+      id: admin._id.toString(),
+      email: admin.email,
+      role: "admin",
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      title: admin.title,
+      avatar: admin.avatar,
+      isFirstLogin: !admin.passwordSet,
+    },
   });
 };
 
 /**
  * ADMIN FIRST LOGIN
  */
-export const adminFirstLoginController = async (req: Request, res: Response) => {
-    const { email, lastName } = req.body;
+export const adminFirstLoginController = async (
+  req: Request,
+  res: Response
+) => {
+  const { email, lastName } = req.body;
 
-    const admin = await Admin.findOne({ email: email.toLowerCase() });
+  const admin = await Admin.findOne({ email: email.toLowerCase() });
 
-    if (!admin) {
-        return res.status(401).json({ message: "Invalid credentials" });
-    }
+  if (!admin) {
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
 
-    if (admin.accountStatus === "SUSPENDED") {
-        return res.status(403).json({ message: "Account suspended" });
-    }
+  if (admin.accountStatus === "SUSPENDED") {
+    return res.status(403).json({ message: "Account suspended" });
+  }
 
-    if (admin.passwordSet) {
-        return res.status(400).json({ message: "Password already set. Please login normally." });
-    }
+  if (admin.passwordSet) {
+    return res
+      .status(400)
+      .json({ message: "Password already set. Please login normally." });
+  }
 
-    // Check last name
-    if (admin.lastName.toLowerCase() !== lastName.toLowerCase()) {
-        return res.status(401).json({ message: "Invalid credentials" });
-    }
+  // Check last name
+  if (admin.lastName.toLowerCase() !== lastName.toLowerCase()) {
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
 
-    // Generate temp token
-    const tempToken = generateToken({
-        id: admin._id.toString(),
-        role: "ADMIN"
-    });
+  // Generate temp token
+  const tempToken = generateToken({
+    id: admin._id.toString(),
+    role: "ADMIN",
+  });
 
-    res.json({
-        requiresPasswordReset: true,
-        token: tempToken,
-        user: {
-            id: admin._id.toString(),
-            email: admin.email,
-            role: "admin",
-            firstName: admin.firstName,
-            lastName: admin.lastName,
-            title: admin.title,
-            avatar: admin.avatar,
-            isFirstLogin: true
-        }
-    });
+  res.json({
+    requiresPasswordReset: true,
+    token: tempToken,
+    user: {
+      id: admin._id.toString(),
+      email: admin.email,
+      role: "admin",
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      title: admin.title,
+      avatar: admin.avatar,
+      isFirstLogin: true,
+    },
+  });
 };
 
 export const setupAdminPassword = async (req: Request, res: Response) => {
-    const { password, firstName, title } = req.body;
-    const user = req.user; // Attached by protect middleware
+  const { password, firstName, title } = req.body;
+  const user = req.user; // Attached by protect middleware
 
-    if (!user || user.role !== "ADMIN") {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
+  if (!user || user.role !== "ADMIN") {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
 
-    const admin = await Admin.findById(user.id).select("+password");
-    if (!admin) {
-        return res.status(404).json({ message: "Admin not found" });
-    }
+  const admin = await Admin.findById(user.id).select("+password");
+  if (!admin) {
+    return res.status(404).json({ message: "Admin not found" });
+  }
 
-    if (admin.passwordSet) {
-        return res.status(400).json({ message: "Password already set" });
-    }
+  if (admin.passwordSet) {
+    return res.status(400).json({ message: "Password already set" });
+  }
 
-    const hashedPassword = await hashPassword(password);
-    admin.password = hashedPassword;
-    admin.passwordSet = true;
-    admin.accountStatus = "ACTIVE";
-    if (firstName) admin.firstName = firstName;
-    if (title) admin.title = title;
+  const hashedPassword = await hashPassword(password);
+  admin.password = hashedPassword;
+  admin.passwordSet = true;
+  admin.accountStatus = "ACTIVE";
+  if (firstName) admin.firstName = firstName;
+  if (title) admin.title = title;
 
-    await admin.save();
+  await admin.save();
 
-    const token = generateToken({
-        id: admin._id.toString(),
-        role: "ADMIN"
-    });
+  const token = generateToken({
+    id: admin._id.toString(),
+    role: "ADMIN",
+  });
 
-    res.json({
-        message: "Password set successfully",
-        token,
-        user: {
-            id: admin._id.toString(),
-            email: admin.email,
-            role: "admin",
-            firstName: admin.firstName,
-            lastName: admin.lastName,
-            title: admin.title,
-            avatar: admin.avatar,
-            isFirstLogin: false
-        }
-    });
+  res.json({
+    message: "Password set successfully",
+    token,
+    user: {
+      id: admin._id.toString(),
+      email: admin.email,
+      role: "admin",
+      firstName: admin.firstName,
+      lastName: admin.lastName,
+      title: admin.title,
+      avatar: admin.avatar,
+      isFirstLogin: false,
+    },
+  });
 };
 
 export const requestPasswordReset = async (req: Request, res: Response) => {
@@ -331,7 +336,7 @@ export const requestPasswordReset = async (req: Request, res: Response) => {
       message: "If the email exists, a reset link will be sent",
     });
   }
-  
+
   const { rawToken, hashedToken, expiresAt } = generateResetToken();
 
   user.passwordResetToken = hashedToken;
