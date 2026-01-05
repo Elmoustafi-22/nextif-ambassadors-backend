@@ -10,8 +10,11 @@ export class EmailService {
       user: env.SMTP_USER,
       pass: env.SMTP_PASS,
     },
-    connectionTimeout: 10000, // 10 seconds
-    greetingTimeout: 10000, // 10 seconds
+    pool: true, // Use a pool of connections
+    debug: true, // Show debug output
+    logger: true, // Log information
+    connectionTimeout: 20000, // 20 seconds
+    greetingTimeout: 20000, // 20 seconds
     socketTimeout: 30000, // 30 seconds
   });
 
