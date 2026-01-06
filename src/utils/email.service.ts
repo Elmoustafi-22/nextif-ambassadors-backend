@@ -12,6 +12,13 @@ export class EmailService {
     html: string;
     senderName?: string;
   }) {
+    if (!env.SMTP_PASS) {
+      console.error(
+        "❌ Email Error: SMTP_PASS is not defined in environment variables."
+      );
+      throw new Error("Brevo API Key (SMTP_PASS) is missing.");
+    }
+
     const payload = {
       sender: {
         name: options.senderName || "NextIF",
@@ -23,10 +30,17 @@ export class EmailService {
     };
 
     try {
+      // Diagnostic log (masked)
+      console.log(
+        `Attempting to send email via Brevo API. Key length: ${
+          env.SMTP_PASS.length
+        }, Starts with: ${env.SMTP_PASS.substring(0, 5)}...`
+      );
+
       const response = await fetch(this.BREVO_API_URL, {
         method: "POST",
         headers: {
-          "api-key": env.SMTP_PASS || "",
+          "api-key": env.SMTP_PASS,
           "content-type": "application/json",
           accept: "application/json",
         },
