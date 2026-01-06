@@ -168,6 +168,12 @@ export const createAmbassador = async (req: Request, res: Response) => {
       .json({ message: "Ambassador with this email already exists" });
   }
 
+  // Check if email belongs to an admin
+  const existingAdmin = await Admin.findOne({ email: email.toLowerCase() });
+  if (existingAdmin) {
+    return res.status(400).json({ message: "Email already in use" });
+  }
+
   // Create with PRELOADED status
   const ambassador = await Ambassador.create({
     firstName,
@@ -226,6 +232,29 @@ export const updateAmbassador = async (req: Request, res: Response) => {
     linkedin,
     facebook,
   } = req.body;
+
+  // Check if email is being changed and if it's already in use
+  if (email) {
+    const emailLower = email.toLowerCase();
+    const existingAmbassador = await Ambassador.findOne({
+      email: emailLower,
+      _id: { $ne: id }, // Exclude current ambassador
+    });
+
+    if (existingAmbassador) {
+      return res.status(400).json({
+        message: "Email already in use by another ambassador",
+      });
+    }
+
+    // Optional: Check if email belongs to an admin
+    const existingAdmin = await Admin.findOne({ email: emailLower });
+    if (existingAdmin) {
+      return res.status(400).json({
+        message: "Email already in use",
+      });
+    }
+  }
 
   const updateData: any = {};
   if (firstName) updateData.firstName = firstName;
@@ -396,6 +425,15 @@ export const bulkOnboardAmbassadors = async (req: Request, res: Response) => {
       });
       if (existing) {
         errors.push({ email, message: "Already exists" });
+        continue;
+      }
+
+      // Check if email belongs to an admin
+      const existingAdmin = await Admin.findOne({
+        email: email.toLowerCase().trim(),
+      });
+      if (existingAdmin) {
+        errors.push({ email, message: "Email already in use" });
         continue;
       }
 
