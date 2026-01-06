@@ -412,10 +412,18 @@ export const bulkOnboardAmbassadors = async (req: Request, res: Response) => {
 
       const phone = record.phone || record["phone number"] || record.tel;
 
-      if (!email || !firstName || !institution) {
+      if (!email || !firstName || !lastName || !institution || !courseOfStudy) {
         errors.push({
           record,
-          message: `Missing required fields (Found: email:${!!email}, firstName:${!!firstName}, institution:${!!institution})`,
+          message: `Missing required fields: ${[
+            !email && "email",
+            !firstName && "firstName",
+            !lastName && "lastName",
+            !institution && "institution",
+            !courseOfStudy && "courseOfStudy",
+          ]
+            .filter(Boolean)
+            .join(", ")}`,
         });
         continue;
       }

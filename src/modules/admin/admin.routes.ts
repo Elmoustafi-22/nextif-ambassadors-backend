@@ -2,6 +2,8 @@ import { Router } from "express";
 import { protect } from "../../middlewares/auth.middleware";
 import { role } from "../../middlewares/roles.middleware";
 import { upload } from "../../middlewares/upload.middleware";
+import { validate } from "../../middlewares/validation.middleware";
+import { createAmbassadorSchema } from "../../utils/validation.schemas";
 import {
   getAdminProfile,
   updateAdminProfile,
@@ -44,7 +46,11 @@ adminRouter.post(
   bulkOnboardAmbassadors
 ); // Bulk Import
 adminRouter.get("/ambassadors", getAllAmbassadors);
-adminRouter.post("/ambassadors", createAmbassador);
+adminRouter.post(
+  "/ambassadors",
+  validate(createAmbassadorSchema),
+  createAmbassador
+);
 adminRouter.get("/ambassadors/:id", getAmbassadorById);
 adminRouter.patch("/ambassadors/:id", updateAmbassador);
 adminRouter.patch("/ambassadors/:id/status", updateAmbassadorStatus);

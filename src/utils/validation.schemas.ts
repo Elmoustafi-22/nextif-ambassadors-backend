@@ -73,3 +73,18 @@ export const submitTaskSchema = z.object({
       .optional(),
   }),
 });
+
+// AMBASSADOR SCHEMAS
+export const createAmbassadorSchema = z.object({
+  body: z.object({
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    email: z.string().email("Invalid email address"),
+    institution: z.string().min(1, "University/Institution is required"),
+    courseOfStudy: z.string().min(1, "Course of study is required"),
+    instagram: z.string().optional(),
+    twitter: z.string().optional(),
+    linkedin: z.string().optional(),
+    facebook: z.string().optional(),
+  }),
+});
