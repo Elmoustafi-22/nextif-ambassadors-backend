@@ -71,7 +71,7 @@ export class EmailService {
     firstName: string,
     lastName: string
   ) {
-    const loginUrl = env.FRONTEND_URL; // Using the same base URL, usually /admin is the path
+    const loginUrl = env.ADMIN_FRONTEND_URL; // Using the same base URL, usually /admin is the path
 
     const html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">

@@ -18,6 +18,7 @@ export const env = {
   SMTP_PASS: process.env.SMTP_PASS,
   FROM_EMAIL: process.env.FROM_EMAIL || "no-reply@nextif.com",
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
+  ADMIN_FRONTEND_URL: process.env.ADMIN_FRONTEND_URL || "http://localhost:3000",
 };
 
 if (!env.MONGODB_URI) {
