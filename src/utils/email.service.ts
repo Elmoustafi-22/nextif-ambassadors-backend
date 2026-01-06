@@ -64,6 +64,48 @@ export class EmailService {
   }
 
   /**
+   * Send Welcome Email to New Admin
+   */
+  static async sendAdminWelcomeEmail(
+    to: string,
+    firstName: string,
+    lastName: string
+  ) {
+    const loginUrl = env.FRONTEND_URL; // Using the same base URL, usually /admin is the path
+
+    const html = `
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #2563eb;">Welcome, ${firstName}!</h2>
+          <p>You have been added as an <strong>Administrator</strong> to the <strong>NextIF Ambassador Portal</strong>.</p>
+          
+          <p>Please log in to the admin dashboard to manage ambassadors, tasks, and system settings.</p>
+          
+          <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold;">Login Instructions:</p>
+            <ul style="margin: 10px 0;">
+              <li><strong>URL:</strong> <a href="${loginUrl}">${loginUrl}</a></li>
+              <li>Click on <strong>First time logging in</strong> (Admin section), then sign in with:</li>
+              <li><strong>Username:</strong> ${to}</li>
+              <li><strong>Initial Password:</strong> Use your <strong>Last Name</strong> (case-sensitive)</li>
+            </ul>
+          </div>
+
+          <p>If you encounter any errors, please send your complaints to <a href="mailto:mustapha.it@nextif.org">mustapha.it@nextif.org</a>.</p>
+         
+          <p style="color: #6b7280; font-size: 0.9em;">Important: You will be required to set a new password immediately after your first successful login.</p>
+          
+          <p>Best regards,<br/>The NextIF Technical Team</p>
+        </div>
+      `;
+
+    return this.sendViaApi({
+      to,
+      subject: "Admin Access Granted: NextIF Ambassador Portal",
+      html,
+    });
+  }
+
+  /**
    * Send Welcome Email to New Ambassador
    */
   static async sendAmbassadorWelcomeEmail(
@@ -76,9 +118,9 @@ export class EmailService {
     const html = `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
           <h2 style="color: #2563eb;">Welcome, ${firstName}!</h2>
-          <p>You have been officially added as an ambassador to the <strong>NextIF Ambassador Portal</strong>.</p>
+          <p>You have been officially added as NxtIF ambassador to the <strong>NextIF Ambassador Portal</strong>.</p>
           
-          <p>To get started, please log in to your dashboard to complete your profile and view your assignments.</p>
+          <p>To get started, please log in to your dashboard to complete your profile.</p>
           
           <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
             <p style="margin: 0; font-weight: bold;">Login Instructions:</p>
@@ -89,6 +131,7 @@ export class EmailService {
               <li><strong>Initial Password:</strong> Use your <strong>Last Name</strong> (case-sensitive)</li>
             </ul>
           </div>
+          <p>If you encounter any errors, please send your complaints to <a href="mailto:mustapha.it@nextif.org">mustapha.it@nextif.org</a>.</p>
           
           <p style="color: #6b7280; font-size: 0.9em;">Important: You will be required to set a new password immediately after your first successful login.</p>
           
