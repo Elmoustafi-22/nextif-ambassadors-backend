@@ -126,9 +126,9 @@ export class EmailService {
 
     <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin: 20px 0;">
       <ul style="margin: 10px 0;">
-        <li><strong>URL:</strong> <a href="\${loginUrl}">\${loginUrl}</a></li>
+        <li><strong>URL:</strong> <a href="${loginUrl}">${loginUrl}</a></li>
         <li>Click on <strong>First time logging in</strong>, then sign in with:</li>
-        <li><strong>Username:</strong> \${to}</li>
+        <li><strong>Username:</strong> ${to}</li>
         <li><strong>Initial Password:</strong> Use your <strong>Last Name</strong> (case-sensitive)</li>
       </ul>
     </div>

@@ -1,4 +1,5 @@
 import { Schema, model, Types } from "mongoose";
+import { IAdmin } from "../admin/admin.model";
 
 export interface ITask {
   title: string;
@@ -20,6 +21,7 @@ export interface ITask {
     url: string;
     type: "VIDEO" | "PDF" | "LINK";
   }[];
+  createdBy: Types.ObjectId | IAdmin;
 }
 
 const taskSchema = new Schema<ITask>(
@@ -56,6 +58,7 @@ const taskSchema = new Schema<ITask>(
         type: { type: String, enum: ["VIDEO", "PDF", "LINK"], required: true },
       },
     ],
+    createdBy: { type: Schema.Types.ObjectId, ref: "Admin", required: true },
   },
   {
     timestamps: true,

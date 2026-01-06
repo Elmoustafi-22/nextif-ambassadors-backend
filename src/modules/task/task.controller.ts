@@ -11,7 +11,10 @@ import { Types } from "mongoose";
  */
 
 export const getTaskById = async (req: Request, res: Response) => {
-  const task = await Task.findById(req.params.id);
+  const task = await Task.findById(req.params.id).populate(
+    "createdBy",
+    "firstName lastName"
+  );
   if (!task) {
     return res.status(404).json({ message: "Task not found" });
   }
@@ -67,6 +70,7 @@ export const createTask = async (req: Request, res: Response) => {
     requirements,
     whatToDo: whatToDo || [],
     materials: materials || [],
+    createdBy: new Types.ObjectId(req.user!.id),
   });
 
   res.status(201).json(task);
@@ -90,7 +94,9 @@ export const createTask = async (req: Request, res: Response) => {
 };
 
 export const getAllTasks = async (req: Request, res: Response) => {
-  const tasks = await Task.find().sort({ createdAt: -1 });
+  const tasks = await Task.find()
+    .populate("createdBy", "firstName lastName")
+    .sort({ createdAt: -1 });
   res.json(tasks);
 };
 
@@ -214,7 +220,9 @@ export const getMyTasks = async (req: Request, res: Response) => {
   // 1. Get tasks assigned to this ambassador
   const tasks = await Task.find({
     assignedTo: req.user.id,
-  }).sort({ dueDate: 1 });
+  })
+    .populate("createdBy", "firstName lastName")
+    .sort({ dueDate: 1 });
 
   // 2. Get submissions for these tasks by this ambassador
   const submissions = await TaskSubmission.find({
