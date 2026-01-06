@@ -11,13 +11,14 @@ export interface IAmbassador {
   passwordResetToken?: string | undefined;
   passwordResetExpires?: Date | undefined;
   profile: {
-    phone?: string;
-    avatar?: string;
-    university?: string;
-    instagram?: string;
-    twitter?: string;
-    linkedin?: string;
-    facebook?: string;
+    phone?: string | undefined;
+    avatar?: string | undefined;
+    institution?: string | undefined;
+    courseOfStudy?: string | undefined;
+    instagram?: string | undefined;
+    twitter?: string | undefined;
+    linkedin?: string | undefined;
+    facebook?: string | undefined;
   };
   createdAt: Date;
 }
@@ -46,7 +47,8 @@ const ambassadorSchema = new Schema<IAmbassador>(
     profile: {
       phone: String,
       avatar: String,
-      university: String,
+      institution: String,
+      courseOfStudy: String,
       instagram: String,
       twitter: String,
       linkedin: String,

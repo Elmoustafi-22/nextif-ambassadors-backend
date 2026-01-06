@@ -153,7 +153,8 @@ export const createAmbassador = async (req: Request, res: Response) => {
     firstName,
     lastName,
     email,
-    university,
+    institution,
+    courseOfStudy,
     instagram,
     twitter,
     linkedin,
@@ -173,7 +174,8 @@ export const createAmbassador = async (req: Request, res: Response) => {
     lastName,
     email,
     profile: {
-      university,
+      institution,
+      courseOfStudy,
       instagram,
       twitter,
       linkedin,
@@ -217,7 +219,8 @@ export const updateAmbassador = async (req: Request, res: Response) => {
     firstName,
     lastName,
     email,
-    university,
+    institution,
+    courseOfStudy,
     instagram,
     twitter,
     linkedin,
@@ -229,10 +232,18 @@ export const updateAmbassador = async (req: Request, res: Response) => {
   if (lastName) updateData.lastName = lastName;
   if (email) updateData.email = email.toLowerCase();
 
-  // Social media and University are in profile object
-  if (university || instagram || twitter || linkedin || facebook) {
+  // Social media and Institution are in profile object
+  if (
+    institution ||
+    courseOfStudy ||
+    instagram ||
+    twitter ||
+    linkedin ||
+    facebook
+  ) {
     updateData.profile = {};
-    if (university) updateData["profile.university"] = university;
+    if (institution) updateData["profile.institution"] = institution;
+    if (courseOfStudy) updateData["profile.courseOfStudy"] = courseOfStudy;
     if (instagram) updateData["profile.instagram"] = instagram;
     if (twitter) updateData["profile.twitter"] = twitter;
     if (linkedin) updateData["profile.linkedin"] = linkedin;
@@ -246,7 +257,8 @@ export const updateAmbassador = async (req: Request, res: Response) => {
           firstName: firstName,
           lastName: lastName,
           email: email?.toLowerCase(),
-          "profile.university": university,
+          "profile.institution": institution,
+          "profile.courseOfStudy": courseOfStudy,
           "profile.instagram": instagram,
           "profile.twitter": twitter,
           "profile.linkedin": linkedin,
@@ -296,13 +308,6 @@ export const updateAmbassadorStatus = async (req: Request, res: Response) => {
   res.json(ambassador);
 };
 
-interface CsvAmbassadorRecord {
-  firstName: string;
-  lastName: string;
-  email: string;
-  university: string;
-}
-
 export const bulkOnboardAmbassadors = async (req: Request, res: Response) => {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
@@ -312,45 +317,96 @@ export const bulkOnboardAmbassadors = async (req: Request, res: Response) => {
 
   try {
     const fileContent = req.file.buffer.toString();
-    const records = parse(fileContent, {
-      columns: true,
+    const rawLines = parse(fileContent, {
+      columns: false,
       skip_empty_lines: true,
       trim: true,
-    }) as CsvAmbassadorRecord[];
+    }) as string[][];
 
-    const results = [];
-    const errors = [];
+    if (rawLines.length < 2) {
+      return res.status(400).json({ message: "CSV file is empty or invalid" });
+    }
 
-    for (const record of records) {
-      // Expecting email, firstName, lastName, university in CSV
-      if (
-        !record.email ||
-        !record.firstName ||
-        !record.lastName ||
-        !record.university
-      ) {
+    // Find the header row (contains 'email')
+    let headerIndex = -1;
+    for (let i = 0; i < Math.min(rawLines.length, 5); i++) {
+      if (rawLines[i]?.some((cell) => cell.toLowerCase().includes("email"))) {
+        headerIndex = i;
+        break;
+      }
+    }
+
+    if (headerIndex === -1) {
+      return res
+        .status(400)
+        .json({ message: "Could not find a header row with 'EMAIL' column" });
+    }
+
+    const headers = rawLines[headerIndex]!.map((h) => h.toLowerCase().trim());
+    const dataRows = rawLines.slice(headerIndex + 1);
+
+    const results: any[] = [];
+    const errors: any[] = [];
+
+    for (const row of dataRows) {
+      const record: any = {};
+      headers.forEach((h, index) => {
+        if (row[index] !== undefined) {
+          record[h] = row[index];
+        }
+      });
+
+      // Flexible mapping
+      let email = record.email || record["email address"];
+      let firstName = record.firstname || record["first name"];
+      let lastName = record.lastname || record["last name"];
+      const fullName = record["full name"] || record["name"];
+      const institution =
+        record.institution || record.institutions || record.university;
+      const courseOfStudy =
+        record.courseofstudy ||
+        record["course of study"] ||
+        record.course ||
+        record["course of study"];
+
+      // Handle Full Name splitting if first/last are missing
+      if (fullName && (!firstName || !lastName)) {
+        const parts = fullName.trim().split(/\s+/);
+        if (parts.length >= 2) {
+          firstName = parts[0];
+          lastName = parts.slice(1).join(" ");
+        } else {
+          firstName = fullName;
+          lastName = " "; // Default or empty
+        }
+      }
+
+      const phone = record.phone || record["phone number"] || record.tel;
+
+      if (!email || !firstName || !institution) {
         errors.push({
           record,
-          message:
-            "Missing required fields (firstName, lastName, email, university)",
+          message: `Missing required fields (Found: email:${!!email}, firstName:${!!firstName}, institution:${!!institution})`,
         });
         continue;
       }
 
       const existing = await Ambassador.findOne({
-        email: record.email.toLowerCase(),
+        email: email.toLowerCase().trim(),
       });
       if (existing) {
-        errors.push({ email: record.email, message: "Already exists" });
+        errors.push({ email, message: "Already exists" });
         continue;
       }
 
       const newAmbassador = await Ambassador.create({
-        firstName: record.firstName,
-        lastName: record.lastName,
-        email: record.email,
+        firstName: firstName.trim(),
+        lastName: (lastName || "").trim(),
+        email: email.toLowerCase().trim(),
         profile: {
-          university: record.university,
+          institution: institution.trim(),
+          courseOfStudy: (courseOfStudy || "").trim(),
+          phone: (phone || "").trim(),
         },
         accountStatus: "PRELOADED",
         passwordSet: false,
@@ -365,7 +421,7 @@ export const bulkOnboardAmbassadors = async (req: Request, res: Response) => {
           newAmbassador.lastName
         );
       } catch (error) {
-        console.error(`Failed to send email to ${record.email}:`, error);
+        console.error(`Failed to send email to ${email}:`, error);
       }
 
       results.push(newAmbassador);

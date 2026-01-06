@@ -27,7 +27,7 @@ export const updateProfile = async (req: Request, res: Response) => {
   }
   const { phone, avatar, instagram, twitter, linkedin, facebook } = req.body;
 
-  // Only allow updating specific profile fields (Restricting university and names)
+  // Only allow updating specific profile fields (Restricting institution, courseOfStudy and names)
   const ambassador = await Ambassador.findByIdAndUpdate(
     req.user.id,
     {

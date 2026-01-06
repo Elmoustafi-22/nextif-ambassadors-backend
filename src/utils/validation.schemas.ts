@@ -34,16 +34,26 @@ export const createTaskSchema = z.object({
     assignedTo: z.array(z.string()).min(1, "Assign at least one ambassador"),
     rewardPoints: z.number().min(0, "Reward points must be at least 0"),
     isBonus: z.boolean().optional(),
-    requirements: z.array(z.string()).min(1, "At least one requirement is needed"),
-    whatToDo: z.array(z.object({
-      title: z.string().min(1, "Item title is required"),
-      description: z.string().min(1, "Item description is required"),
-    })).optional(),
-    materials: z.array(z.object({
-      title: z.string().min(1, "Material title is required"),
-      url: z.string().url("Invalid material URL"),
-      type: z.enum(["VIDEO", "PDF", "LINK"]),
-    })).optional(),
+    requirements: z
+      .array(z.string())
+      .min(1, "At least one requirement is needed"),
+    whatToDo: z
+      .array(
+        z.object({
+          title: z.string().min(1, "Item title is required"),
+          description: z.string().min(1, "Item description is required"),
+        })
+      )
+      .optional(),
+    materials: z
+      .array(
+        z.object({
+          title: z.string().min(1, "Material title is required"),
+          url: z.string().url("Invalid material URL"),
+          type: z.enum(["VIDEO", "PDF", "LINK"]),
+        })
+      )
+      .optional(),
   }),
 });
 
@@ -53,9 +63,13 @@ export const submitTaskSchema = z.object({
   body: z.object({
     content: z.string().optional(),
     links: z.array(z.string()).optional(),
-    responses: z.array(z.object({
-      whatToDoId: z.string(),
-      text: z.string()
-    })).optional(),
+    responses: z
+      .array(
+        z.object({
+          whatToDoId: z.string(),
+          text: z.string(),
+        })
+      )
+      .optional(),
   }),
 });
