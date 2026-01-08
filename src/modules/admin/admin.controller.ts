@@ -578,3 +578,52 @@ export const deleteAmbassador = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error deleting ambassador", error });
   }
 };
+
+/**
+ * ADMIN DIRECTORY & MESSAGING
+ */
+
+export const getAllAdmins = async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+  const admins = await Admin.find({ _id: { $ne: req.user.id } }) // Exclude self
+    .select("firstName lastName email title avatar accountStatus createdAt")
+    .sort({ createdAt: -1 });
+
+  res.json(admins);
+};
+
+export const getAdminById = async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+  const admin = await Admin.findById(req.params.id).select(
+    "-password -passwordResetToken -passwordResetExpires"
+  );
+  if (!admin) {
+    return res.status(404).json({ message: "Admin not found" });
+  }
+
+  res.json(admin);
+};
+
+export const sendAdminMessage = async (req: Request, res: Response) => {
+  if (!req.user) return res.status(401).json({ message: "Unauthorized" });
+
+  const { recipientId, title, body } = req.body;
+
+  // Verify recipient exists
+  const recipient = await Admin.findById(recipientId);
+  if (!recipient) {
+    return res.status(404).json({ message: "Admin recipient not found" });
+  }
+
+  const notification = await NotificationService.send(
+    recipientId,
+    "ADMIN",
+    "MESSAGE",
+    title,
+    body
+  );
+
+  res.status(201).json(notification);
+};

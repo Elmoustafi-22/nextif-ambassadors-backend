@@ -19,6 +19,9 @@ import {
   getDashboardStats,
   changeAdminPassword,
   deleteAmbassador,
+  getAllAdmins,
+  getAdminById,
+  sendAdminMessage,
 } from "./admin.controller";
 
 const adminRouter = Router();
@@ -36,8 +39,13 @@ adminRouter.patch("/change-password", changeAdminPassword);
 adminRouter.get("/stats", getDashboardStats);
 
 // Messaging / Announcements
-adminRouter.post("/messages", sendMessage);
+adminRouter.post("/messages", sendMessage); // To Ambassador
 adminRouter.post("/announcements", sendAnnouncement);
+
+// Admin Directory & Internal Messaging
+adminRouter.get("/list", getAllAdmins); // /api/v1/admin/list
+adminRouter.get("/list/:id", getAdminById);
+adminRouter.post("/internal-messages", sendAdminMessage);
 
 // Ambassador Management (Admin View)
 adminRouter.post(
