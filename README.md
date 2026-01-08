@@ -25,6 +25,10 @@ The backend API service for the NextIF Ambassador Platform. It provides RESTful 
   - Individual due date overrides for redo requests.
   - Reviewer tracking for accountability.
 - **Bulk Operations:** Onboard multiple ambassadors via CSV.
+- **Event & Attendance System:**
+  - Full CRUD operations for Webinars, Meetings, and Workshops.
+  - Admin tools for marking attendance (Single & Bulk).
+  - Attendance history tracking for ambassadors.
 - **File & Link Submissions:** Secure uploads via Cloudinary.
 
 - Node.js (v18 or higher recommended)
