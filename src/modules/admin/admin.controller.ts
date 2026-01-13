@@ -117,7 +117,7 @@ export const changeAdminPassword = async (req: Request, res: Response) => {
 export const getAllAmbassadors = async (req: Request, res: Response) => {
   if (!req.user) return res.status(401).json({ message: "Unauthorized" });
 
-  const { page = 1, limit = 10, status, search } = req.query;
+  const { page = 1, limit = 50, status, search } = req.query;
 
   const query: any = {};
   if (status) query.accountStatus = status;
