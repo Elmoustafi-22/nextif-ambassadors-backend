@@ -286,11 +286,17 @@ export const submitTask = async (req: Request, res: Response) => {
     }
   }
 
+  // Debug logging for file uploads
+  console.log("Files received:", req.files);
+  console.log("Body proofFiles:", req.body.proofFiles);
+
   // If files were uploaded via multer, they will be in req.files
   const files = req.files as Express.Multer.File[];
   const proofFiles = files
-    ? files.map((f) => f.path)
+    ? files.map((f: any) => f.path || f.url || (f as any).secure_url)
     : req.body.proofFiles || [];
+
+  console.log("Mapped proofFiles:", proofFiles);
 
   const task = await Task.findById(id);
   if (!task) {
