@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { protect } from "../../middlewares/auth.middleware";
 import { role } from "../../middlewares/roles.middleware";
-import { upload } from "../../middlewares/upload.middleware";
+import { upload, csvUpload } from "../../middlewares/upload.middleware";
 import { validate } from "../../middlewares/validation.middleware";
 import { createAmbassadorSchema } from "../../utils/validation.schemas";
 import {
@@ -50,7 +50,7 @@ adminRouter.post("/internal-messages", sendAdminMessage);
 // Ambassador Management (Admin View)
 adminRouter.post(
   "/ambassadors/bulk",
-  upload.single("file"),
+  csvUpload.single("file"),
   bulkOnboardAmbassadors
 ); // Bulk Import
 adminRouter.get("/ambassadors", getAllAmbassadors);

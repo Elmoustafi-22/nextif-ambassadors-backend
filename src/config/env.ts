@@ -19,10 +19,23 @@ export const env = {
   FROM_EMAIL: process.env.FROM_EMAIL || "no-reply@nextif.com",
   FRONTEND_URL: process.env.FRONTEND_URL || "http://localhost:3000",
   ADMIN_FRONTEND_URL: process.env.ADMIN_FRONTEND_URL || "http://localhost:3000",
+  CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
+  CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
 };
 
 if (!env.MONGODB_URI) {
   throw new Error("❌ Fatal Error: MONGODB_URI is not defined");
+}
+
+if (
+  !env.CLOUDINARY_CLOUD_NAME ||
+  !env.CLOUDINARY_API_KEY ||
+  !env.CLOUDINARY_API_SECRET
+) {
+  console.warn(
+    "⚠️ Warning: Cloudinary configuration is missing. File uploads will fail."
+  );
 }
 
 if (
