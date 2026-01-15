@@ -326,8 +326,8 @@ export const submitTask = async (req: Request, res: Response) => {
     return res.status(400).json({ message: "Submission deadline has passed" });
   }
 
-  // Determine Status: Always COMPLETED upon submission as per request
-  const status = "COMPLETED";
+  // Determine Status: Check verification type
+  const status = task.verificationType === "AUTO" ? "COMPLETED" : "SUBMITTED";
 
   console.log(
     `Submitting task ${id} for user ${req.user.id}, setting status to ${status}`
